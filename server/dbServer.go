@@ -2,6 +2,7 @@ package server
 
 import (
 	"log"
+	"repeatro/models"
 	// "strconv"
 
 	"github.com/spf13/viper"
@@ -10,11 +11,13 @@ import (
 )
 
 func InitDatabase(config *viper.Viper) *gorm.DB {
-	dsn := "host=localhost port=5432 user=tomatocoder password=postgres dbname=repeatro sslmode=disable"
-	db, err := gorm.Open(postgres.Open(dsn))
+	// dsn := "host=localhost port=5432 user=tomatocoder password=postgres dbname=repeatro sslmode=disable"
+	db, err := gorm.Open(postgres.Open(config.GetString("database.connection_string")))
 	if err != nil {
 		log.Fatalf("Error during opening database")
 	}
+
+	db.AutoMigrate(&models.Card{})
 	
 	return db
 

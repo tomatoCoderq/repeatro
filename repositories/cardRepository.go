@@ -1,7 +1,9 @@
 package repositories
 
 import (
+	"fmt"
 	"strconv"
+	"time"
 
 	"repeatro/models"
 
@@ -13,7 +15,7 @@ type CardRepository struct {
 	db *gorm.DB
 }
 
-func CreateNewCardRepository(db *gorm.DB) *CardRepository{
+func CreateNewCardRepository(db *gorm.DB) *CardRepository {
 	return &CardRepository{db: db}
 }
 
@@ -31,17 +33,27 @@ func (cr CardRepository) AddCard(card *models.Card) error {
 	return result.Error
 }
 
-func (cm CardRepository) ReadAllCards() ([]models.Card, error) {
-	return []models.Card{}, nil
+func (cr CardRepository) ReadAllCards() ([]models.Card, error) {
+	var cards []models.Card
+	err := cr.db.Where("expires_at < ?", time.Now()).Find(&cards).Error
+	if err != nil {
+		return nil, err
+	}
+	return cards, err
 }
 
-func (cm CardRepository) UpdateCard(id int) (models.Card, error) {
+func (cr CardRepository) UpdateCard(id int) (models.Card, error) {
 	return models.Card{}, nil
 }
 
-func (cm CardRepository) DeleteCard(id int) error {
-	return nil
+func (cr CardRepository) DeleteCard(id int) error {
+	strId := strconv.Itoa(id)
+	fmt.Println(strId)
+	err := cr.db.Delete(&models.Card{}, "card_id = ?", strId).Error
+	return err
 }
+
+// <---Mock functions--->
 
 func (cm CardRepositoryMock) AddCard(card *models.Card) error {
 	return nil

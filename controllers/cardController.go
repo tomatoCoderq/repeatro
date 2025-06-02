@@ -66,9 +66,23 @@ func (cc CardController) UpdateCard(ctx *gin.Context) {
 
 // Delete
 func (cc CardController) DeleteCard(ctx *gin.Context) {
-	id := ctx.Request.Header.Get("id")
+	// id := ctx.Request.Header.Get("id")
 
-	err := cc.CardService.DeleteCard(id)
+	body, err := io.ReadAll(ctx.Request.Body)
+	if err != nil {
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	var id struct {
+		Id string `json:"id"`
+	}
+	if err = json.Unmarshal(body, &id); err != nil {
+		ctx.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	err = cc.CardService.DeleteCard(id.Id)
 	if err != nil {
 		ctx.AbortWithError(http.StatusInternalServerError, err)
 		return

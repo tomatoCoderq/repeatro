@@ -2,15 +2,16 @@ package services
 
 import (
 	"fmt"
-	"repeatro/models"
-	"repeatro/repositories"
 	"strconv"
 	"time"
 	"unicode"
+
+	"repeatro/models"
+	"repeatro/repositories"
 )
 
-func IsStringDigit(input string) bool{
-	for _, i :=  range input {
+func IsStringDigit(input string) bool {
+	for _, i := range input {
 		if !unicode.IsDigit(i) {
 			return false
 		}
@@ -19,18 +20,17 @@ func IsStringDigit(input string) bool{
 }
 
 func SMTwoAlgo(currentDate time.Time, grade int, repetitionNumber int, easinessFactor float32, interval time.Duration) {
-
 }
 
-type CardService struct{
+type CardService struct {
 	cardRepository repositories.CardRepositoryInterface
 }
 
-func CreateNewCardService(cardRepository *repositories.CardRepository) *CardService{
+type CardServiceMock struct{}
+
+func CreateNewCardService(cardRepository *repositories.CardRepository) *CardService {
 	return &CardService{cardRepository: cardRepository}
 }
-
-type CardServiceMock struct{}
 
 type CardServiceInterface interface {
 	AddCard(card *models.Card) (*models.Card, error)
@@ -40,7 +40,7 @@ type CardServiceInterface interface {
 }
 
 func (cs CardService) AddCard(card *models.Card) (*models.Card, error) {
-	//check all elements, write via rep
+	// check all elements, write via rep
 	if !IsStringDigit(card.CardId) {
 		return nil, fmt.Errorf("CardId is not a digit")
 	}
@@ -57,20 +57,12 @@ func (cs CardService) AddCard(card *models.Card) (*models.Card, error) {
 	return card, nil
 }
 
-func (cm CardServiceMock) AddCard(card *models.Card) (*models.Card, error) {
-	return &models.Card{}, nil 
-}
-
 func (cm CardService) ReadAllCards() ([]models.Card, error) {
 	cards, err := cm.cardRepository.ReadAllCards()
 	if err != nil {
 		return nil, err
 	}
 	return cards, nil
-}
-
-func (cm CardServiceMock) ReadAllCards() ([]models.Card, error) {
-	return []models.Card{{CardId: "idid"}}, nil
 }
 
 func (cm CardService) UpdateCard(id string) (models.Card, error) {
@@ -86,11 +78,6 @@ func (cm CardService) UpdateCard(id string) (models.Card, error) {
 	}
 
 	return card, nil
-
-}
-
-func (cm CardServiceMock) UpdateCard(id string) (models.Card, error) {
-	return models.Card{CardId: "idid"}, nil
 }
 
 func (cm CardService) DeleteCard(id string) error {
@@ -108,9 +95,18 @@ func (cm CardService) DeleteCard(id string) error {
 	return nil
 }
 
+func (cm CardServiceMock) AddCard(card *models.Card) (*models.Card, error) {
+	return &models.Card{}, nil
+}
+
+func (cm CardServiceMock) ReadAllCards() ([]models.Card, error) {
+	return []models.Card{{CardId: "idid"}}, nil
+}
+
+func (cm CardServiceMock) UpdateCard(id string) (models.Card, error) {
+	return models.Card{CardId: "idid"}, nil
+}
+
 func (cm CardServiceMock) DeleteCard(id string) error {
 	return nil
 }
-
-
-

@@ -1,9 +1,12 @@
 package main
 
-import "repeatro/server"
+import (
+	"repeatro/server"
+	"repeatro/config"
+)
 
 func main() {
-	config := InitConfig("config")
+	config := config.InitConfig("config")
 
 	db := server.InitDatabase(config)
 

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"net/http"
 	"repeatro/controllers"
 	"repeatro/repositories"
 	"repeatro/services"
@@ -25,17 +26,22 @@ func InitHTTPServer(config *viper.Viper, db *gorm.DB) *HttpServer {
 	cardController := controllers.CreateNewCardController(cardService)
 
 	// here routers
+	router := gin.Default()
+
+	router.Handle(http.MethodPost, "cards/", cardController.AddCard)
+	router.Handle(http.MethodGet, "cards/", cardController.ReadAllCardsToLearn)
+	router.Handle(http.MethodPost, "cards/delete/", cardController.DeleteCard)
 
 	return &HttpServer{
 		config:         config,
-		router:         gin.Default(),
+		router:         router,
 		db:             db,
 		cardController: cardController,
 	}
 }
 
 func (hs *HttpServer) StartHttpServer() {
-	err := hs.router.Run(hs.config.GetString("http.server_addres"))
+	err := hs.router.Run(hs.config.GetString("http.server_address"))
 	if err != nil {
 		panic("error during starting")
 	}
