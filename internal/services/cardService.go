@@ -6,8 +6,8 @@ import (
 	"time"
 	"unicode"
 
-	"repeatro/models"
-	"repeatro/repositories"
+	"repeatro/internal/models"
+	"repeatro/internal/repositories"
 )
 
 func IsStringDigit(input string) bool {
@@ -45,10 +45,7 @@ func (cs CardService) AddCard(card *models.Card) (*models.Card, error) {
 		return nil, fmt.Errorf("CardId is not a digit")
 	}
 
-	card.CreatedAt = time.Now()
-	card.RepetitionNumber = "0"
 	card.ExpiresAt = time.Now().Add(10 * time.Second)
-	// here i need to calculate time
 
 	err := cs.cardRepository.AddCard(card)
 	if err != nil {

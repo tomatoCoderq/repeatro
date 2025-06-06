@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"repeatro/models"
+	"repeatro/internal/models"
 
 	"gorm.io/gorm"
 )
@@ -64,7 +64,7 @@ func (cm CardRepositoryMock) ReadAllCards() ([]models.Card, error) {
 }
 
 func (cm CardRepositoryMock) UpdateCard(id int) (models.Card, error) {
-	return models.Card{CardId: strconv.Itoa(id), RepetitionNumber: "1"}, nil
+	return models.Card{CardId: strconv.Itoa(id), RepetitionNumber: 1}, nil
 }
 
 func (cm CardRepositoryMock) DeleteCard(id int) error {

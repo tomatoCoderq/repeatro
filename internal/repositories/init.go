@@ -1,8 +1,8 @@
-package server
+package repositories
 
 import (
 	"log"
-	"repeatro/models"
+	"repeatro/internal/models"
 	// "strconv"
 
 	"github.com/spf13/viper"

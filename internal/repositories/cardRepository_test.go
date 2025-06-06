@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"repeatro/models"
+	"repeatro/internal/models"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
@@ -41,18 +41,22 @@ func TestAddCard(t *testing.T) {
 	repo := CreateNewCardRepository(db)
 
 	card := &models.Card{
-		CardId:           "1",
-		Word:             "hello",
-		Translation:      "hola",
-		CreatedAt:        time.Now(),
-		ExpiresAt:        time.Now().Add(24 * time.Hour),
-		RepetitionNumber: "0",
+		CardId:      "1232",
+		Word:        "hello",
+		Translation: "hola",
 	}
 
 	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO .*").
-		WithArgs(card.CardId, card.Word, card.Translation, card.CreatedAt, card.ExpiresAt, card.RepetitionNumber).
-		WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectQuery("INSERT INTO .*").
+		WithArgs(
+			card.CardId,
+			sqlmock.AnyArg(), // created_at
+			sqlmock.AnyArg(), // expires_at
+			0,                // repetition_number
+			card.Word,
+			card.Translation,
+		).
+		WillReturnRows(sqlmock.NewRows([]string{"word", "translation"}).AddRow(card.Word, card.Translation))
 	mock.ExpectCommit()
 
 	err := repo.AddCard(card)
@@ -97,10 +101,12 @@ func TestDeleteCard(t *testing.T) {
 
 	cardID := "123"
 	id, _ := strconv.Atoi(cardID)
+	// word := "test"
+	// translation := "test translation"
 
 	mock.ExpectBegin()
 	mock.ExpectExec(`DELETE FROM .* WHERE card_id = \$1`).
-		WithArgs(id).
+		WithArgs(cardID).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 	mock.ExpectCommit()
 

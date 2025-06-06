@@ -2,13 +2,14 @@ package server
 
 import (
 	"net/http"
-	"repeatro/controllers"
-	"repeatro/repositories"
-	"repeatro/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"gorm.io/gorm"
+
+	"repeatro/internal/controllers"
+	"repeatro/internal/repositories"
+	"repeatro/internal/services"
 )
 
 type HttpServer struct {
@@ -30,7 +31,7 @@ func InitHTTPServer(config *viper.Viper, db *gorm.DB) *HttpServer {
 
 	router.Handle(http.MethodPost, "cards/", cardController.AddCard)
 	router.Handle(http.MethodGet, "cards/", cardController.ReadAllCardsToLearn)
-	router.Handle(http.MethodPost, "cards/delete/", cardController.DeleteCard)
+	router.Handle(http.MethodDelete, "cards/", cardController.DeleteCard)
 
 	return &HttpServer{
 		config:         config,

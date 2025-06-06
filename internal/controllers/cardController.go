@@ -5,8 +5,8 @@ import (
 	"io"
 	"net/http"
 
-	"repeatro/models"
-	"repeatro/services"
+	"repeatro/internal/models"
+	"repeatro/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
@@ -66,23 +66,14 @@ func (cc CardController) UpdateCard(ctx *gin.Context) {
 
 // Delete
 func (cc CardController) DeleteCard(ctx *gin.Context) {
-	// id := ctx.Request.Header.Get("id")
+	card_id := ctx.Request.URL.Query().Get("card_id")
 
-	body, err := io.ReadAll(ctx.Request.Body)
-	if err != nil {
-		ctx.AbortWithError(http.StatusInternalServerError, err)
+	if card_id == "" {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "card_id is required"})
 		return
 	}
 
-	var id struct {
-		Id string `json:"id"`
-	}
-	if err = json.Unmarshal(body, &id); err != nil {
-		ctx.AbortWithError(http.StatusInternalServerError, err)
-		return
-	}
-
-	err = cc.CardService.DeleteCard(id.Id)
+	err := cc.CardService.DeleteCard(card_id)
 	if err != nil {
 		ctx.AbortWithError(http.StatusInternalServerError, err)
 		return

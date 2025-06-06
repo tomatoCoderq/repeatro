@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	// "repeatro/models"
-	"repeatro/models"
-	"repeatro/services"
+	"repeatro/internal/models"
+	"repeatro/internal/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
