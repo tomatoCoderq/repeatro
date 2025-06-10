@@ -6,6 +6,7 @@ import (
 	"repeatro/internal/security"
 	"repeatro/internal/server"
 	"repeatro/migrations"
+	"time"
 
 	"github.com/pressly/goose/v3"
 )
@@ -13,8 +14,8 @@ import (
 func main() {
 	config := config.InitConfig("config")
 
-	security := security.Security{}
-	security.GenerateKey()
+	security := security.Security{ExpirationDelta: 30 * time.Minute}
+	security.GetKyes()
 
 	db := repositories.InitDatabase(config)
 

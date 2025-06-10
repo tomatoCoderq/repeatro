@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"crypto/ecdsa"
 	"encoding/json"
 	"io"
 	// "reflect"
@@ -14,15 +13,8 @@ import (
 	"repeatro/internal/security"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	// "github.com/google/uuid"
 	// "golang.org/x/crypto/bcrypt"
-)
-
-var (
-	t     *jwt.Token
-	key   *ecdsa.PrivateKey
-	token string
 )
 
 type UserController struct {
@@ -50,7 +42,7 @@ func (uc *UserController) Register(ctx *gin.Context) {
 		return
 	}
 
-	token, err = uc.UserService.Register(userRegister)
+	token, err := uc.UserService.Register(userRegister)
 
 	if err != nil {
 		ctx.AbortWithError(500, err)

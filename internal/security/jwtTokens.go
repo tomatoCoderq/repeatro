@@ -2,11 +2,16 @@ package security
 
 import (
 	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rand"
+	
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
+	"os"
+	"net/http"
+	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
@@ -22,14 +27,63 @@ type CustomClaims struct {
 	jwt.RegisteredClaims // includes exp, nbf, iat, etc.
 }
 
-func (s *Security) GenerateKey() (error){
-	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+func ReadECDSAPrivateKey(path string) (*ecdsa.PrivateKey, error) {
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("reading private key file: %w", err)
 	}
 
-	s.PrivateKey = key
-	s.PublicKey = &key.PublicKey
+	block, _ := pem.Decode(data)
+	if block == nil || block.Type != "EC PRIVATE KEY" {
+		return nil, fmt.Errorf("invalid PEM block type for private key: %s", block.Type)
+	}
+
+	privKey, err := x509.ParseECPrivateKey(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("parsing private key: %w", err)
+	}
+	return privKey, nil
+}
+
+// ReadECDSAPublicKey loads a public key from a PEM file
+func ReadECDSAPublicKey(path string) (*ecdsa.PublicKey, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("reading public key file: %w", err)
+	}
+
+	block, _ := pem.Decode(data)
+	if block == nil || block.Type != "PUBLIC KEY" {
+		return nil, fmt.Errorf("invalid PEM block type for public key: %s", block.Type)
+	}
+
+	pubInterface, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("parsing public key: %w", err)
+	}
+
+	pubKey, ok := pubInterface.(*ecdsa.PublicKey)
+	if !ok {
+		return nil, fmt.Errorf("not an ECDSA public key")
+	}
+
+	return pubKey, nil
+}
+
+
+func (s *Security) GetKyes() (error){
+	privateKey, err := ReadECDSAPrivateKey("./private.pem")
+	if err != nil {
+		panic(err)
+	}
+
+	publicKey, err := ReadECDSAPublicKey("./public.pem")
+	if err != nil {
+		panic(err)
+	}
+
+	s.PrivateKey = privateKey
+	s.PublicKey = publicKey
 
 	return  nil
 }
@@ -67,4 +121,51 @@ func (s *Security) DecodeToken(token string) (CustomClaims, error) {
 	}
 
 	return *claimsToGet, nil
+}
+
+func (s *Security) AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header missing"})
+			return
+		}
+
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			fmt.Println("HERE1")
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
+			return
+		}
+
+		tokenString := parts[1]
+		claims, err := s.validateToken(tokenString)
+		if err != nil {
+			fmt.Println("HERE2")
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			return
+		}
+
+		// You can store claims in context for use in handlers
+		c.Set("userClaims", claims)
+		c.Next()
+	}
+}
+
+func  (s *Security) validateToken(tokenString string) (jwt.MapClaims, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return s.PublicKey, nil
+	})
+
+	if err != nil {
+		fmt.Println("HERE5", token)
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		fmt.Println("HERE6")
+		return claims, nil
+	}
+
+	return nil, jwt.ErrTokenMalformed
 }

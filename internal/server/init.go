@@ -38,9 +38,12 @@ func InitHTTPServer(config *viper.Viper, db *gorm.DB, security security.Security
 	// here routers
 	router := gin.Default()
 
-	router.Handle(http.MethodPost, "cards/", cardController.AddCard)
-	router.Handle(http.MethodGet, "cards/", cardController.ReadAllCardsToLearn)
-	router.Handle(http.MethodDelete, "cards/", cardController.DeleteCard)
+	secured := router.Group("/cards")
+	secured.Use(security.AuthMiddleware())
+
+	secured.Handle(http.MethodPost, "", cardController.AddCard)
+	secured.Handle(http.MethodGet, "", cardController.ReadAllCardsToLearn)
+	secured.Handle(http.MethodDelete, "", cardController.DeleteCard)
 	router.Handle(http.MethodPost, "register/", userController.Register)
 	router.Handle(http.MethodPost, "login/", userController.Login)
 
