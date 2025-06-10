@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/google/uuid"
+
 	// "repeatro/models"
 	"repeatro/internal/models"
 	"repeatro/internal/services"
@@ -48,9 +50,8 @@ func TestReadAllCardsToLearn(t *testing.T) {
 	data := w.Body.Bytes()
 	var cards []models.Card
 	json.Unmarshal(data, &cards)
-	assert.Equal(t, []models.Card{{CardId: "idid"}}, cards)
+	assert.Equal(t, []models.Card{{CardId: uuid.New()}}, cards)
 }
-
 
 // // Update
 func TestUpdateCard(t *testing.T) {
@@ -70,7 +71,7 @@ func TestUpdateCard(t *testing.T) {
 	var card models.Card
 	json.Unmarshal(data, &card)
 
-	assert.Equal(t, models.Card{CardId: "idid"}, card)
+	assert.Equal(t, models.Card{CardId: uuid.New()}, card)
 }
 
 // // Delete

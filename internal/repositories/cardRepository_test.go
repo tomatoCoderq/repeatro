@@ -12,6 +12,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"github.com/google/uuid"
+
 	// "gorm.io/gorm/logger"
 )
 
@@ -41,7 +43,7 @@ func TestAddCard(t *testing.T) {
 	repo := CreateNewCardRepository(db)
 
 	card := &models.Card{
-		CardId:      "1232",
+		CardId:      uuid.New(),
 		Word:        "hello",
 		Translation: "hola",
 	}

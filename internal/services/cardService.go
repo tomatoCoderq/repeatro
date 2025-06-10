@@ -6,6 +6,8 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/google/uuid"
+
 	"repeatro/internal/models"
 	"repeatro/internal/repositories"
 )
@@ -39,14 +41,7 @@ type CardServiceInterface interface {
 	DeleteCard(id string) error
 }
 
-func (cs CardService) AddCard(card *models.Card) (*models.Card, error) {
-	// check all elements, write via rep
-	if !IsStringDigit(card.CardId) {
-		return nil, fmt.Errorf("CardId is not a digit")
-	}
-
-	card.ExpiresAt = time.Now().Add(10 * time.Second)
-
+func (cs CardService) AddCard(card *models.Card) (*models.Card, error) {	
 	err := cs.cardRepository.AddCard(card)
 	if err != nil {
 		return nil, err
@@ -97,11 +92,11 @@ func (cm CardServiceMock) AddCard(card *models.Card) (*models.Card, error) {
 }
 
 func (cm CardServiceMock) ReadAllCards() ([]models.Card, error) {
-	return []models.Card{{CardId: "idid"}}, nil
+	return []models.Card{{CardId: uuid.New(),},}, nil
 }
 
 func (cm CardServiceMock) UpdateCard(id string) (models.Card, error) {
-	return models.Card{CardId: "idid"}, nil
+	return models.Card{CardId: uuid.New()}, nil
 }
 
 func (cm CardServiceMock) DeleteCard(id string) error {

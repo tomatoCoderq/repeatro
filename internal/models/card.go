@@ -1,24 +1,25 @@
 package models
 
 import (
-	_"errors"
+	_ "errors"
 	"time"
 
-	_"gorm.io/gorm"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+	_ "gorm.io/gorm"
 )
 
 type Card struct {
-	CardId          string    `gorm:"primaryKey;size:36;not null" json:"card_id"`
+	CardId          uuid.UUID    `gorm:"type:uuid;primaryKey;" json:"card_id"`
 	Word            string    `gorm:"type:varchar(100);not null;default:null" json:"word"`
 	Translation     string    `gorm:"type:varchar(100);not null;default:null" json:"translation"`
 	CreatedAt       time.Time `gorm:"autoCreateTime" json:"created_at"`
 	ExpiresAt       time.Time `gorm:"autoCreateTime" json:"expires_at"`
-	RepetitionNumber int   `gorm:"type:smallint;not null;default=0" json:"repetition_number"`
+	RepetitionNumber int   `gorm:"type:smallint;default=0" json:"repetition_number"`
 }
 
-// func (c *Card) BeforeCreate(tx *gorm.DB) error {
-// 	if c.Word == "" {
-// 		return errors.New("email must not be empty")
-// 	}
-// 	return nil
-// }
+func (c *Card) BeforeCreate(tx *gorm.DB) error {
+	c.CardId = uuid.New()
+	c.ExpiresAt = time.Now().Add(10 * time.Second)
+	return nil
+}

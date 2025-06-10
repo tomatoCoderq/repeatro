@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -35,6 +36,7 @@ func (cc CardController) AddCard(ctx *gin.Context) {
 
 	response, err := cc.CardService.AddCard(&card)
 	if err != nil {
+		fmt.Print("was heere")
 		ctx.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
@@ -76,6 +78,7 @@ func (cc CardController) DeleteCard(ctx *gin.Context) {
 	err := cc.CardService.DeleteCard(card_id)
 	if err != nil {
 		ctx.AbortWithError(http.StatusInternalServerError, err)
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, err)
 		return
 	}
 	ctx.Status(http.StatusOK)

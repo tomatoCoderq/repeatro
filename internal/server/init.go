@@ -9,6 +9,8 @@ import (
 
 	"repeatro/internal/controllers"
 	"repeatro/internal/repositories"
+	"repeatro/internal/security"
+
 	"repeatro/internal/services"
 )
 
@@ -19,12 +21,19 @@ type HttpServer struct {
 	cardController *controllers.CardController
 }
 
-func InitHTTPServer(config *viper.Viper, db *gorm.DB) *HttpServer {
+func InitHTTPServer(config *viper.Viper, db *gorm.DB, security security.Security) *HttpServer {
 	cardRepository := repositories.CreateNewCardRepository(db)
 
 	cardService := services.CreateNewCardService(cardRepository)
 
 	cardController := controllers.CreateNewCardController(cardService)
+
+	userRepository := repositories.CreateNewUserRepository(db)
+
+	userService := services.CreateNewUserService(userRepository, &security)
+
+	userController := controllers.CreateNewUserController(userService, &security)
+
 
 	// here routers
 	router := gin.Default()
@@ -32,6 +41,8 @@ func InitHTTPServer(config *viper.Viper, db *gorm.DB) *HttpServer {
 	router.Handle(http.MethodPost, "cards/", cardController.AddCard)
 	router.Handle(http.MethodGet, "cards/", cardController.ReadAllCardsToLearn)
 	router.Handle(http.MethodDelete, "cards/", cardController.DeleteCard)
+	router.Handle(http.MethodPost, "register/", userController.Register)
+	router.Handle(http.MethodPost, "login/", userController.Login)
 
 	return &HttpServer{
 		config:         config,

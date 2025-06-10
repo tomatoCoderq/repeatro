@@ -7,6 +7,8 @@ import (
 	"repeatro/internal/models"
 	"repeatro/internal/repositories"
 
+	"github.com/google/uuid"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -37,7 +39,7 @@ func TestUpdateCard(t *testing.T) {
 
 	assert.Equal(t, nil, err)
 
-	assert.Equal(t, models.Card{CardId: "0", RepetitionNumber: 1}, cardNew)
+	assert.Equal(t, models.Card{CardId: uuid.New(), RepetitionNumber: 1}, cardNew)
 }
 
 func TestDeleteCard(t *testing.T) {

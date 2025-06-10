@@ -17,7 +17,7 @@ func InitDatabase(config *viper.Viper) *gorm.DB {
 		log.Fatalf("Error during opening database")
 	}
 
-	db.AutoMigrate(&models.Card{})
+	db.AutoMigrate(&models.Card{}, &models.User{})
 	
 	return db
 

@@ -7,6 +7,7 @@ import (
 
 	"repeatro/internal/models"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -29,8 +30,8 @@ type CardRepositoryInterface interface {
 }
 
 func (cr CardRepository) AddCard(card *models.Card) error {
-	result := cr.db.Create(card)
-	return result.Error
+	return cr.db.Create(card).Error
+	
 }
 
 func (cr CardRepository) ReadAllCards() ([]models.Card, error) {
@@ -60,11 +61,11 @@ func (cm CardRepositoryMock) AddCard(card *models.Card) error {
 }
 
 func (cm CardRepositoryMock) ReadAllCards() ([]models.Card, error) {
-	return []models.Card{{CardId: "1"}, {CardId: "2"}}, nil
+	return []models.Card{{CardId: uuid.New()}, {CardId: uuid.New()}}, nil
 }
 
 func (cm CardRepositoryMock) UpdateCard(id int) (models.Card, error) {
-	return models.Card{CardId: strconv.Itoa(id), RepetitionNumber: 1}, nil
+	return models.Card{CardId: uuid.New(), RepetitionNumber: 1}, nil
 }
 
 func (cm CardRepositoryMock) DeleteCard(id int) error {
