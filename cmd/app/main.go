@@ -14,7 +14,7 @@ import (
 func main() {
 	config := config.InitConfig("config")
 
-	security := security.Security{ExpirationDelta: 30 * time.Minute}
+	security := security.Security{ExpirationDelta: 600 * time.Minute}
 	security.GetKyes()
 
 	db := repositories.InitDatabase(config)

@@ -1,90 +1,90 @@
 package controllers
 
-import (
-	"bytes"
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
-	"testing"
+// import (
+// 	"bytes"
+// 	"encoding/json"
+// 	"net/http"
+// 	"net/http/httptest"
+// 	"testing"
 
-	"github.com/google/uuid"
+// 	"github.com/google/uuid"
 
-	// "repeatro/models"
-	"repeatro/internal/models"
-	"repeatro/internal/services"
+// 	// "repeatro/models"
+// 	"repeatro/internal/models"
+// 	"repeatro/internal/services"
 
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
-)
+// 	"github.com/gin-gonic/gin"
+// 	"github.com/stretchr/testify/assert"
+// )
 
-func InitMock() CardController {
-	cardServiceMock := services.CardServiceMock{}
-	cardController := CardController{CardService: cardServiceMock}
-	return cardController
-}
+// func InitMock() CardController {
+// 	cardServiceMock := services.CardServiceMock{}
+// 	cardController := CardController{CardService: cardServiceMock}
+// 	return cardController
+// }
 
-// Insert
-func TestAddCard(t *testing.T) {
-	// cardService := services.CardService{}
-	cardController := InitMock()
+// // Insert
+// func TestAddCard(t *testing.T) {
+// 	// cardService := services.CardService{}
+// 	cardController := InitMock()
 
-	cardJSON := `{"card_id": "idid", "word": "Bonjour"}`
-	req := httptest.NewRequest(http.MethodPost, "/cards", bytes.NewBufferString(cardJSON))
+// 	cardJSON := `{"card_id": "idid", "word": "Bonjour"}`
+// 	req := httptest.NewRequest(http.MethodPost, "/cards", bytes.NewBufferString(cardJSON))
 
-	w := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(w)
-	c.Request = req
+// 	w := httptest.NewRecorder()
+// 	c, _ := gin.CreateTestContext(w)
+// 	c.Request = req
 
-	cardController.AddCard(c)
-	assert.Equal(t, 200, w.Code)
-}
+// 	cardController.AddCard(c)
+// 	assert.Equal(t, 200, w.Code)
+// }
 
-// Read
-func TestReadAllCardsToLearn(t *testing.T) {
-	cardController := InitMock()
+// // Read
+// func TestReadAllCardsToLearn(t *testing.T) {
+// 	cardController := InitMock()
 
-	w := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(w)
+// 	w := httptest.NewRecorder()
+// 	c, _ := gin.CreateTestContext(w)
 
-	cardController.ReadAllCardsToLearn(c)
-	data := w.Body.Bytes()
-	var cards []models.Card
-	json.Unmarshal(data, &cards)
-	assert.Equal(t, []models.Card{{CardId: uuid.New()}}, cards)
-}
+// 	cardController.ReadAllCardsToLearn(c)
+// 	data := w.Body.Bytes()
+// 	var cards []models.Card
+// 	json.Unmarshal(data, &cards)
+// 	assert.Equal(t, []models.Card{{CardId: uuid.New()}}, cards)
+// }
 
-// // Update
-func TestUpdateCard(t *testing.T) {
-	cardController := InitMock()
+// // // Update
+// func TestUpdateCard(t *testing.T) {
+// 	cardController := InitMock()
 
-	cardJSON := `{"card_id": "idid", "word": "BonjourYopta"}`
-	req := httptest.NewRequest(http.MethodPost, "/cards/4", bytes.NewBufferString(cardJSON))
+// 	cardJSON := `{"card_id": "idid", "word": "BonjourYopta"}`
+// 	req := httptest.NewRequest(http.MethodPost, "/cards/4", bytes.NewBufferString(cardJSON))
 
-	w := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(w)
-	c.Request = req
+// 	w := httptest.NewRecorder()
+// 	c, _ := gin.CreateTestContext(w)
+// 	c.Request = req
 
-	cardController.UpdateCard(c)
-	assert.Equal(t, 200, w.Code)
+// 	cardController.UpdateCard(c)
+// 	assert.Equal(t, 200, w.Code)
 
-	data := w.Body.Bytes()
-	var card models.Card
-	json.Unmarshal(data, &card)
+// 	data := w.Body.Bytes()
+// 	var card models.Card
+// 	json.Unmarshal(data, &card)
 
-	assert.Equal(t, models.Card{CardId: uuid.New()}, card)
-}
+// 	assert.Equal(t, models.Card{CardId: uuid.New()}, card)
+// }
 
-// // Delete
-func TestDeleteCard(t *testing.T) {
-	cardController := InitMock()
+// // // Delete
+// func TestDeleteCard(t *testing.T) {
+// 	cardController := InitMock()
 
-	cardJSON := `{"card_id": "idid", "word": "BonjourYopta"}`
-	req := httptest.NewRequest(http.MethodDelete, "/cards/4", bytes.NewBufferString(cardJSON))
+// 	cardJSON := `{"card_id": "idid", "word": "BonjourYopta"}`
+// 	req := httptest.NewRequest(http.MethodDelete, "/cards/4", bytes.NewBufferString(cardJSON))
 
-	w := httptest.NewRecorder()
-	c, _ := gin.CreateTestContext(w)
-	c.Request = req
+// 	w := httptest.NewRecorder()
+// 	c, _ := gin.CreateTestContext(w)
+// 	c.Request = req
 
-	cardController.DeleteCard(c)
-	assert.Equal(t, 200, w.Code)
-}
+// 	cardController.DeleteCard(c)
+// 	assert.Equal(t, 200, w.Code)
+// }

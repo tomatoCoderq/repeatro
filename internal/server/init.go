@@ -42,6 +42,8 @@ func InitHTTPServer(config *viper.Viper, db *gorm.DB, security security.Security
 	secured.Use(security.AuthMiddleware())
 
 	secured.Handle(http.MethodPost, "", cardController.AddCard)
+	secured.Handle(http.MethodPost, "/answers", cardController.AddAnswers)
+	secured.Handle(http.MethodPut, "/:id", cardController.UpdateCard)
 	secured.Handle(http.MethodGet, "", cardController.ReadAllCardsToLearn)
 	secured.Handle(http.MethodDelete, "", cardController.DeleteCard)
 	router.Handle(http.MethodPost, "register/", userController.Register)

@@ -2,7 +2,7 @@ package services
 
 import (
 	"fmt"
-	"strconv"
+	"math"
 	"time"
 	"unicode"
 
@@ -10,6 +10,7 @@ import (
 
 	"repeatro/internal/models"
 	"repeatro/internal/repositories"
+	"repeatro/internal/schemes"
 )
 
 func IsStringDigit(input string) bool {
@@ -21,7 +22,54 @@ func IsStringDigit(input string) bool {
 	return true
 }
 
-func SMTwoAlgo(currentDate time.Time, grade int, repetitionNumber int, easinessFactor float32, interval time.Duration) {
+type ReviewResult struct {
+	NextReviewTime time.Time
+	Interval       int // in minutes
+	Easiness       float64
+	Repetitions    int
+}
+
+func SM2(
+	now time.Time,
+	previousInterval int, // in minutes
+	previousEasiness float64,
+	repetitions int,
+	grade int, // 0–5 scale
+) ReviewResult {
+	var interval int
+	easiness := previousEasiness
+
+	if grade < 3 {
+		repetitions = 0
+		interval = 1 // reset to 5 minutes
+	} else {
+		switch repetitions {
+		case 0:
+			interval = 5
+		case 1:
+			interval = 30
+		default:
+			minutes := float64(previousInterval) * easiness
+			interval = int(math.Round(minutes))
+		}
+		repetitions++
+	}
+
+	easiness += 0.1 - float64(5-grade)*(0.08+float64(5-grade)*0.02)
+	if easiness < 1.3 {
+		easiness = 1.3
+	}
+
+	fmt.Println(time.Duration(interval))
+
+	nextReviewTime := now.Add(time.Duration(interval) * time.Minute )
+
+	return ReviewResult{
+		NextReviewTime: nextReviewTime,
+		Interval:       interval,
+		Easiness:       easiness,
+		Repetitions:    repetitions,
+	}
 }
 
 type CardService struct {
@@ -37,11 +85,12 @@ func CreateNewCardService(cardRepository *repositories.CardRepository) *CardServ
 type CardServiceInterface interface {
 	AddCard(card *models.Card) (*models.Card, error)
 	ReadAllCards() ([]models.Card, error)
-	UpdateCard(id string) (models.Card, error)
-	DeleteCard(id string) error
+	UpdateCard(id uuid.UUID, card *schemes.UpdateCardScheme) (*models.Card, error)
+	DeleteCard(id uuid.UUID) error
+	AddAnswers(answers []schemes.AnswerScheme) error
 }
 
-func (cs CardService) AddCard(card *models.Card) (*models.Card, error) {	
+func (cs CardService) AddCard(card *models.Card) (*models.Card, error) {
 	err := cs.cardRepository.AddCard(card)
 	if err != nil {
 		return nil, err
@@ -57,33 +106,63 @@ func (cm CardService) ReadAllCards() ([]models.Card, error) {
 	return cards, nil
 }
 
-func (cm CardService) UpdateCard(id string) (models.Card, error) {
-	if !IsStringDigit(id) {
-		return models.Card{}, fmt.Errorf("CardId is not a digit")
-	}
-
-	idInt, _ := strconv.Atoi(id)
-
-	card, err := cm.cardRepository.UpdateCard(idInt)
+func (cm CardService) UpdateCard(cardId uuid.UUID, cardUpdate *schemes.UpdateCardScheme) (*models.Card, error) {
+	cardFound, err := cm.cardRepository.ReadCard(cardId)
 	if err != nil {
-		return models.Card{}, nil
+		return nil, err
 	}
 
-	return card, nil
+	fmt.Println("CC", cardFound)
+
+	cardUpdated, err := cm.cardRepository.UpdateCard(cardFound, cardUpdate)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("U", cardUpdated)
+
+	return cardUpdated, nil
 }
 
-func (cm CardService) DeleteCard(id string) error {
-	if !IsStringDigit(id) {
-		return fmt.Errorf("CardId is not a digit")
-	}
-
-	idInt, _ := strconv.Atoi(id)
-
-	err := cm.cardRepository.DeleteCard(idInt)
+func (cm CardService) DeleteCard(cardId uuid.UUID) error {
+	err := cm.cardRepository.DeleteCard(cardId)
 	if err != nil {
 		return nil
 	}
 
+	return nil
+}
+
+func (cm CardService) AddAnswers(answers []schemes.AnswerScheme) error {
+	for _, answer := range answers {
+		if answer.Grade < 0 || answer.Grade > 5 {
+			return fmt.Errorf("invalid grade")
+		}
+		// get all parameters
+		card, err := cm.cardRepository.ReadCard(answer.CardId)
+		if err != nil {
+			return err
+		}
+		// recalculate values
+		reviewResult := SM2(time.Now(),
+			card.Interval,
+			card.Easiness,
+			card.RepetitionNumber,
+			answer.Grade)
+
+		// write back to db
+
+		card.UpdatedAt = time.Now()
+		card.ExpiresAt = reviewResult.NextReviewTime
+		card.Easiness = reviewResult.Easiness
+		card.Interval = int(reviewResult.Interval)
+		card.RepetitionNumber = reviewResult.Repetitions
+
+		//TODO: Add update
+		if err = cm.cardRepository.PureUpdate(card); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -92,13 +171,13 @@ func (cm CardServiceMock) AddCard(card *models.Card) (*models.Card, error) {
 }
 
 func (cm CardServiceMock) ReadAllCards() ([]models.Card, error) {
-	return []models.Card{{CardId: uuid.New(),},}, nil
+	return []models.Card{{CardId: uuid.New()}}, nil
 }
 
-func (cm CardServiceMock) UpdateCard(id string) (models.Card, error) {
+func (cm CardServiceMock) UpdateCard(cardId uuid.UUID) (models.Card, error) {
 	return models.Card{CardId: uuid.New()}, nil
 }
 
-func (cm CardServiceMock) DeleteCard(id string) error {
+func (cm CardServiceMock) DeleteCard(cardId uuid.UUID) error {
 	return nil
 }
