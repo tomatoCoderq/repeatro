@@ -14,6 +14,7 @@ CREATE TABLE
         interval SMALLINT DEFAULT 0,
         expires_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         repetition_number SMALLINT DEFAULT 0,
+        deck_id UUID,
         CONSTRAINT fk_cards_created_by FOREIGN KEY (created_by) REFERENCES users (user_id) ON DELETE CASCADE
     );
 

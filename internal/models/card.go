@@ -7,7 +7,6 @@ import (
 	"gorm.io/gorm"
 )
 
-
 // NOTE: I don't use rn gorm.Model due to redundancy of some fields
 type Card struct {
 	CardId           uuid.UUID `gorm:"type:uuid;primaryKey;" json:"card_id"`
@@ -21,6 +20,7 @@ type Card struct {
 	Interval         int       `gorm:"type:smallint;default=0" json:"interval"`
 	ExpiresAt        time.Time `gorm:"autoCreateTime" json:"expires_at"`
 	RepetitionNumber int       `gorm:"type:smallint;default=0" json:"repetition_number"`
+	DeckID           uuid.UUID `gorm:"type:uuid;index"`
 }
 
 func (c *Card) BeforeCreate(tx *gorm.DB) error {

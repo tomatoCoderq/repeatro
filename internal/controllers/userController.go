@@ -1,20 +1,15 @@
 package controllers
 
 import (
-	"encoding/json"
-	"io"
-	// "reflect"
+	// "fmt"
+	"net/http"
 
-	// "repeatro/internal/models"
 	"repeatro/internal/schemes"
 	"repeatro/internal/services"
 
-	// "repeatro/internal/schemes"
 	"repeatro/internal/security"
 
 	"github.com/gin-gonic/gin"
-	// "github.com/google/uuid"
-	// "golang.org/x/crypto/bcrypt"
 )
 
 type UserController struct {
@@ -30,22 +25,16 @@ func CreateNewUserController(userService *services.UserService, security *securi
 }
 
 func (uc *UserController) Register(ctx *gin.Context) {
-	body, err := io.ReadAll(ctx.Request.Body)
-	if err != nil {
-		ctx.AbortWithError(500, err)
-		return
-	}
-
 	var userRegister schemes.AuthUser
-	if err = json.Unmarshal(body, &userRegister); err != nil {
-		ctx.AbortWithError(500, err)
+
+	if err := ctx.ShouldBindJSON(&userRegister); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
 
-	token, err := uc.UserService.Register(userRegister)
-
+token, err := uc.UserService.Register(userRegister)
 	if err != nil {
-		ctx.AbortWithStatusJSON(500, gin.H{"message": err.Error()})
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
 
@@ -53,40 +42,19 @@ func (uc *UserController) Register(ctx *gin.Context) {
 }
 
 func (uc *UserController) Login(ctx *gin.Context) {
-	body, err := io.ReadAll(ctx.Request.Body)
-	if err != nil {
-		ctx.AbortWithError(500, err)
-		return
-	}
-
-	//get email and password
+	// get email and password
 	var userLogin schemes.AuthUser
-	if err = json.Unmarshal(body, &userLogin); err != nil {
-		ctx.AbortWithError(500, err)
+	
+	if err := ctx.ShouldBindJSON(&userLogin); err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
 
 	token, err := uc.UserService.Login(userLogin)
-
 	if err != nil {
 		ctx.AbortWithError(500, err)
-		return 
+		return
 	}
 
 	ctx.JSON(200, token)
-	
-	// authorization := ctx.Request.Header.Get("Authorization")
-	// token := authorization[7:]
-	// //decode it with secutiry methods 
-	// claims := uc.security.DecodeToken(token)
-
-	// userIf 
-	//check in db that existst
-	//accept
-	//reject
-	// ctx.JSON(200, a[6:])
 }
-
-
-
-

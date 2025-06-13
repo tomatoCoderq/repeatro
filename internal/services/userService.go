@@ -88,7 +88,9 @@ func (us *UserService) FindAllUsers() ([]models.User, error) {
 func (us *UserService) Register(userRegister schemes.AuthUser) (string, error) {
 	userInDB, err := us.userRepository.ReadUserByEmail(userRegister.Email)
 	if err != nil {
-		return "", err
+		if err.Error() != "record not found" {
+			return "", err
+		}
 	}
 
 	if userInDB != nil {
@@ -110,7 +112,7 @@ func (us *UserService) Register(userRegister schemes.AuthUser) (string, error) {
 		return "", err
 	}
 
-	token, err := us.security.EncodeString(userRegister.Password, user_id)
+	token, err := us.security.EncodeString(user.HashedPassword, user_id)
 	if err != nil {
 		return "", err
 	}
