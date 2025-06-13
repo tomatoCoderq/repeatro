@@ -1,0 +1,13 @@
+[database]
+conecction_max_lifetime = '60s'
+connection_string = 'host=localhost port=5432 user=user password=password dbname=repeatro sslmode=disable'
+driver_name = 'postgres'
+max_idle_connections = 5
+max_open_connections = 20
+
+[http]
+server_address = ':8081'
+
+[keys]
+private_key_file = 'private.pem'
+public_key_file = 'public.pem'

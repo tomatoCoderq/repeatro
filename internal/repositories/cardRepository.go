@@ -36,7 +36,6 @@ func updateCardFields(cardInitial *models.Card, card *schemes.UpdateCardScheme) 
 	fmt.Println("CHA:", cardInitial)
 }
 
-// TODO: write repository part, choose bd(postgresql?)
 type CardRepository struct {
 	db *gorm.DB
 }
@@ -49,21 +48,20 @@ type CardRepositoryMock struct{}
 
 type CardRepositoryInterface interface {
 	AddCard(card *models.Card) error
-	ReadAllCards() ([]models.Card, error)
+	ReadAllCards(userId uuid.UUID) ([]models.Card, error)
 	ReadCard(cardId uuid.UUID) (*models.Card, error)
 	PureUpdate(card *models.Card) error
 	UpdateCard(card *models.Card, cardUpdate *schemes.UpdateCardScheme) (*models.Card, error)
 	DeleteCard(cardId uuid.UUID) error
-	// AddAnswers(answers []schemes.Answer) error
 }
 
 func (cr CardRepository) AddCard(card *models.Card) error {
 	return cr.db.Create(card).Error	
 }
 
-func (cr CardRepository) ReadAllCards() ([]models.Card, error) {
+func (cr CardRepository) ReadAllCards(userId uuid.UUID) ([]models.Card, error) {
 	var cards []models.Card
-	err := cr.db.Where("expires_at < ?", time.Now()).Find(&cards).Error
+	err := cr.db.Where("expires_at < ?", time.Now()).Where("created_by = ?", userId).Find(&cards).Error
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +80,6 @@ func (cr CardRepository) UpdateCard(card *models.Card, cardUpdate *schemes.Updat
 }
 
 func (cr CardRepository) PureUpdate(card *models.Card) error {
-	fmt.Println(card)
 	return cr.db.Updates(card).Error
 }
 

@@ -8,7 +8,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// TODO: write repository part, choose bd(postgresql?)
 type UserRepository struct {
 	db *gorm.DB
 }
@@ -46,7 +45,6 @@ func (ur UserRepository) ReadUserByEmail(email string) (*models.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(user)
 	return &user, nil
 }
 

@@ -1,5 +1,6 @@
 -- +goose Up
 -- +goose StatementBegin
+DROP TABLE IF EXISTS cards;
 CREATE TABLE IF NOT EXISTS cards (
     card_id VARCHAR(36) PRIMARY KEY NOT NULL,
     word VARCHAR(100) NOT NULL,

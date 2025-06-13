@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"repeatro/internal/controllers"
+	"repeatro/internal/middlewares"
 	"repeatro/internal/repositories"
 	"repeatro/internal/security"
 
@@ -22,6 +23,7 @@ type HttpServer struct {
 }
 
 func InitHTTPServer(config *viper.Viper, db *gorm.DB, security security.Security) *HttpServer {
+	//TODO: Add logger as middleware
 	cardRepository := repositories.CreateNewCardRepository(db)
 
 	cardService := services.CreateNewCardService(cardRepository)
@@ -39,13 +41,13 @@ func InitHTTPServer(config *viper.Viper, db *gorm.DB, security security.Security
 	router := gin.Default()
 
 	secured := router.Group("/cards")
-	secured.Use(security.AuthMiddleware())
+	secured.Use(security.AuthMiddleware(), middlewares.ValidUserMiddleware())
 
 	secured.Handle(http.MethodPost, "", cardController.AddCard)
 	secured.Handle(http.MethodPost, "/answers", cardController.AddAnswers)
 	secured.Handle(http.MethodPut, "/:id", cardController.UpdateCard)
 	secured.Handle(http.MethodGet, "", cardController.ReadAllCardsToLearn)
-	secured.Handle(http.MethodDelete, "", cardController.DeleteCard)
+	secured.Handle(http.MethodDelete, "/:id", cardController.DeleteCard)
 	router.Handle(http.MethodPost, "register/", userController.Register)
 	router.Handle(http.MethodPost, "login/", userController.Login)
 

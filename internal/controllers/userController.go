@@ -45,7 +45,7 @@ func (uc *UserController) Register(ctx *gin.Context) {
 	token, err := uc.UserService.Register(userRegister)
 
 	if err != nil {
-		ctx.AbortWithError(500, err)
+		ctx.AbortWithStatusJSON(500, gin.H{"message": err.Error()})
 		return
 	}
 

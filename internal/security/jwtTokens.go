@@ -146,7 +146,6 @@ func (s *Security) AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// You can store claims in context for use in handlers
 		c.Set("userClaims", claims)
 		c.Next()
 	}

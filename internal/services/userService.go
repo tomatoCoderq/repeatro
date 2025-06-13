@@ -86,6 +86,15 @@ func (us *UserService) FindAllUsers() ([]models.User, error) {
 }
 
 func (us *UserService) Register(userRegister schemes.AuthUser) (string, error) {
+	userInDB, err := us.userRepository.ReadUserByEmail(userRegister.Email)
+	if err != nil {
+		return "", err
+	}
+
+	if userInDB != nil {
+		return "", fmt.Errorf("cannot register user with same email twice")
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userRegister.Password), bcrypt.DefaultCost) // Use the default cost factor
 	if err != nil {
 		return "", err
@@ -109,19 +118,18 @@ func (us *UserService) Register(userRegister schemes.AuthUser) (string, error) {
 }
 
 func (us *UserService) Login(userLogin schemes.AuthUser) (string, error) {
-	//want to check that users exists and return user
+	// want to check that users exists and return user
 	user, err := us.GetUserByEmail(userLogin.Email)
 	if err != nil {
 		return "", err
 	}
-	
+
 	if bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(userLogin.Password)) != nil {
 		return "", err
 	}
 
-	//want to encode string and return token
+	// want to encode string and return token
 	token, err := us.security.EncodeString(user.HashedPassword, user.UserId)
-
 	if err != nil {
 		return "", err
 	}

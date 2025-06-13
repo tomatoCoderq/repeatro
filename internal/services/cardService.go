@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"time"
-	"unicode"
 
 	"github.com/google/uuid"
 
@@ -12,15 +11,6 @@ import (
 	"repeatro/internal/repositories"
 	"repeatro/internal/schemes"
 )
-
-func IsStringDigit(input string) bool {
-	for _, i := range input {
-		if !unicode.IsDigit(i) {
-			return false
-		}
-	}
-	return true
-}
 
 type ReviewResult struct {
 	NextReviewTime time.Time
@@ -38,7 +28,6 @@ func SM2(
 ) ReviewResult {
 	var interval int
 	easiness := previousEasiness
-
 	if grade < 3 {
 		repetitions = 0
 		interval = 1 // reset to 5 minutes
@@ -62,7 +51,7 @@ func SM2(
 
 	fmt.Println(time.Duration(interval))
 
-	nextReviewTime := now.Add(time.Duration(interval) * time.Minute )
+	nextReviewTime := now.Add(time.Duration(interval) * time.Minute)
 
 	return ReviewResult{
 		NextReviewTime: nextReviewTime,
@@ -84,10 +73,10 @@ func CreateNewCardService(cardRepository *repositories.CardRepository) *CardServ
 
 type CardServiceInterface interface {
 	AddCard(card *models.Card) (*models.Card, error)
-	ReadAllCards() ([]models.Card, error)
-	UpdateCard(id uuid.UUID, card *schemes.UpdateCardScheme) (*models.Card, error)
-	DeleteCard(id uuid.UUID) error
-	AddAnswers(answers []schemes.AnswerScheme) error
+	ReadAllCards(userId uuid.UUID) ([]models.Card, error)
+	UpdateCard(id uuid.UUID, card *schemes.UpdateCardScheme, userId uuid.UUID) (*models.Card, error)
+	DeleteCard(id uuid.UUID, userId uuid.UUID) error
+	AddAnswers(userId uuid.UUID, answers []schemes.AnswerScheme) error
 }
 
 func (cs CardService) AddCard(card *models.Card) (*models.Card, error) {
@@ -98,34 +87,43 @@ func (cs CardService) AddCard(card *models.Card) (*models.Card, error) {
 	return card, nil
 }
 
-func (cm CardService) ReadAllCards() ([]models.Card, error) {
-	cards, err := cm.cardRepository.ReadAllCards()
+func (cm CardService) ReadAllCards(userId uuid.UUID) ([]models.Card, error) {
+	cards, err := cm.cardRepository.ReadAllCards(userId)
 	if err != nil {
 		return nil, err
 	}
 	return cards, nil
 }
 
-func (cm CardService) UpdateCard(cardId uuid.UUID, cardUpdate *schemes.UpdateCardScheme) (*models.Card, error) {
+func (cm CardService) UpdateCard(cardId uuid.UUID, cardUpdate *schemes.UpdateCardScheme, userId uuid.UUID) (*models.Card, error) {
 	cardFound, err := cm.cardRepository.ReadCard(cardId)
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Println("CC", cardFound)
+	if cardFound.CreatedBy != userId {
+		return nil, fmt.Errorf("cannot update other's user card")
+	}
 
 	cardUpdated, err := cm.cardRepository.UpdateCard(cardFound, cardUpdate)
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Println("U", cardUpdated)
-
 	return cardUpdated, nil
 }
 
-func (cm CardService) DeleteCard(cardId uuid.UUID) error {
-	err := cm.cardRepository.DeleteCard(cardId)
+func (cm CardService) DeleteCard(cardId uuid.UUID, userId uuid.UUID) error {
+	cardFound, err := cm.cardRepository.ReadCard(cardId)
+	if err != nil {
+		return err
+	}
+
+	if cardFound.CreatedBy != userId {
+		return fmt.Errorf("cannot delete other's user card")
+	}
+
+	err = cm.cardRepository.DeleteCard(cardId)
 	if err != nil {
 		return nil
 	}
@@ -133,16 +131,33 @@ func (cm CardService) DeleteCard(cardId uuid.UUID) error {
 	return nil
 }
 
-func (cm CardService) AddAnswers(answers []schemes.AnswerScheme) error {
+func (cm CardService) AddAnswers(userId uuid.UUID, answers []schemes.AnswerScheme) error {
 	for _, answer := range answers {
 		if answer.Grade < 0 || answer.Grade > 5 {
 			return fmt.Errorf("invalid grade")
 		}
-		// get all parameters
+
 		card, err := cm.cardRepository.ReadCard(answer.CardId)
 		if err != nil {
 			return err
 		}
+
+		//NOTE: If expire_time not reached yet the card will be just skipped
+		if time.Now().Compare(card.ExpiresAt) == -1 {
+			continue
+		}
+
+		cardOwnerId := card.CreatedBy
+		if userId != cardOwnerId {
+			return fmt.Errorf("invalid card owner")
+		}
+
+		// get all parameters
+		card, err = cm.cardRepository.ReadCard(answer.CardId)
+		if err != nil {
+			return err
+		}
+
 		// recalculate values
 		reviewResult := SM2(time.Now(),
 			card.Interval,
@@ -151,14 +166,11 @@ func (cm CardService) AddAnswers(answers []schemes.AnswerScheme) error {
 			answer.Grade)
 
 		// write back to db
-
 		card.UpdatedAt = time.Now()
 		card.ExpiresAt = reviewResult.NextReviewTime
 		card.Easiness = reviewResult.Easiness
 		card.Interval = int(reviewResult.Interval)
 		card.RepetitionNumber = reviewResult.Repetitions
-
-		//TODO: Add update
 		if err = cm.cardRepository.PureUpdate(card); err != nil {
 			return err
 		}

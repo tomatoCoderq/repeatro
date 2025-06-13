@@ -7,8 +7,12 @@ import (
 	"gorm.io/gorm"
 )
 
+
+// NOTE: I don't use rn gorm.Model due to redundancy of some fields
 type Card struct {
 	CardId           uuid.UUID `gorm:"type:uuid;primaryKey;" json:"card_id"`
+	CreatedBy        uuid.UUID `gorm:"references:UserId;constraint:OnDelete:CASCADE;" json:"created_by"`
+	User             User      `gorm:"foreignKey:CreatedBy;references:UserId" json:"-"`
 	CreatedAt        time.Time `gorm:"autoCreateTime" json:"created_at"`
 	Word             string    `gorm:"type:varchar(100);not null;default:null" json:"word"`
 	Translation      string    `gorm:"type:varchar(100);not null;default:null" json:"translation"`
