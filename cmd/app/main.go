@@ -1,8 +1,11 @@
 package main
 
 import (
+	"log"
 	"time"
 
+	"net/http"
+	_ "net/http/pprof"
 	"repeatro/internal/config"
 	"repeatro/internal/repositories"
 	"repeatro/internal/security"
@@ -21,5 +24,10 @@ func main() {
 
 	server := server.InitHTTPServer(config, db, security)
 
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
+	
 	server.StartHttpServer()
+
 }

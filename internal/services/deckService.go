@@ -25,6 +25,7 @@ func CreateNewDeckService(deckRepository *repositories.DeckRepository, cardRepos
 type DeckServiceInterface interface {
 	AddCard(deck *models.Deck, userId uuid.UUID) (*models.Deck, error)
 	ReadAllDecksOfUser(userId uuid.UUID) ([]models.Deck, error)
+	ReadAllCardsFromDeck(deckId uuid.UUID, userId uuid.UUID) ([]models.Card, error)
 	ReadDeck(deckId uuid.UUID, userId uuid.UUID) (*models.Deck, error)
 	DeleteDeck(deckId uuid.UUID, userId uuid.UUID) error
 	AddCardToDeck(cardId uuid.UUID, deckId uuid.UUID, userId uuid.UUID) error
@@ -56,11 +57,17 @@ func (ds *DeckService) ReadDeck(deckId uuid.UUID, userId uuid.UUID) (*models.Dec
 }
 
 func (ds *DeckService) ReadAllCardsFromDeck(deckId uuid.UUID, userId uuid.UUID) ([]models.Card, error) {
-	deck, err := ds.ReadDeck(deckId, userId)
+	// deck, err := ds.ReadDeck(deckId, userId)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// return deck.Cards, nil
+	cards, err := ds.deckRepository.FindAllCardsInDeck(deckId)
 	if err != nil {
 		return nil, err
 	}
-	return deck.Cards, nil
+	return cards, nil
+	
 }
   
 func (ds *DeckService) DeleteDeck(deckId uuid.UUID, userId uuid.UUID) error {

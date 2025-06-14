@@ -83,6 +83,28 @@ func (dc DeckController) ReadDeck(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, deck)
 }
 
+func (dc DeckController) ReadCardsFromDeck(ctx *gin.Context) {
+	deckId, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid deck ID"})
+		return
+	}
+
+	userId, err := tools.GetUserIdFromContext(ctx)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	cards, err := dc.DeckService.ReadAllCardsFromDeck(deckId, userId)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, cards)
+}
+
 // Delete
 func (dc DeckController) DeleteDeck(ctx *gin.Context) {
 	deckId, err := uuid.Parse(ctx.Param("id"))

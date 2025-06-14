@@ -22,6 +22,7 @@ type DeckRepositoryInterface interface {
 	ReadDeck(deckId uuid.UUID) (*models.Deck, error)
 	DeleteDeck(deckId uuid.UUID) error
 	AddCardToDeck(cardId uuid.UUID, deckId uuid.UUID) error
+	FindAllCardsInDeck(deckId uuid.UUID) ([]models.Card, error )
 }
 
 func (r *DeckRepository) AddDeck(deck *models.Deck) error {
@@ -42,7 +43,7 @@ func (r *DeckRepository) ReadAllDecks() ([]models.Deck, error) {
 
 func (r *DeckRepository) ReadDeck(deckId uuid.UUID) (*models.Deck, error) {
 	var deck models.Deck
-	err := r.db.Where("id = ?", deckId).Preload("Cards").First(&deck).Error
+	err := r.db.Where("deck_id = ?", deckId).Preload("Cards").First(&deck).Error
 	if err != nil {
 		return nil, err
 	}
@@ -50,9 +51,15 @@ func (r *DeckRepository) ReadDeck(deckId uuid.UUID) (*models.Deck, error) {
 }
 
 func (r *DeckRepository) DeleteDeck(deckId uuid.UUID) error {
-	return r.db.Delete(&models.Deck{}, "id = ?", deckId).Error
+	return r.db.Delete(&models.Deck{}, "deck_id = ?", deckId).Error
+}
+
+func (r *DeckRepository) FindAllCardsInDeck(deckId uuid.UUID) ([]models.Card, error) {
+	var cards []models.Card
+	err := r.db.Where("deck_id = ?", deckId).Find(&cards).Error
+	return cards, err
 }
 
 func (r *DeckRepository) AddCardToDeck(cardId uuid.UUID, deckId uuid.UUID) error {
-	return r.db.Model(&models.Card{}).Where("id = ?", cardId).Update("deck_id", deckId).Error
+	return r.db.Model(&models.Card{}).Where("card_id = ?", cardId).Update("deck_id", deckId).Error
 }

@@ -1,7 +1,6 @@
 package repositories
 
 import (
-	"fmt"
 	"time"
 
 	"repeatro/internal/models"
@@ -33,7 +32,7 @@ func updateCardFields(cardInitial *models.Card, card *schemes.UpdateCardScheme) 
 	if card.RepetitionNumber != 0 {
 		cardInitial.RepetitionNumber = card.RepetitionNumber
 	}
-	fmt.Println("CHA:", cardInitial)
+	// TODO: Add tags here
 }
 
 type CardRepository struct {

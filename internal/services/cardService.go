@@ -141,9 +141,10 @@ func (cm CardService) AddAnswers(userId uuid.UUID, answers []schemes.AnswerSchem
 		if err != nil {
 			return err
 		}
-
+		
+		fmt.Println("CARD", card)
 		//NOTE: If expire_time not reached yet the card will be just skipped
-		if time.Now().Compare(card.ExpiresAt) == -1 {
+		if time.Now().Compare(card.ExpiresAt) != -1 {
 			continue
 		}
 
@@ -171,6 +172,8 @@ func (cm CardService) AddAnswers(userId uuid.UUID, answers []schemes.AnswerSchem
 		card.Easiness = reviewResult.Easiness
 		card.Interval = int(reviewResult.Interval)
 		card.RepetitionNumber = reviewResult.Repetitions
+
+
 		if err = cm.cardRepository.PureUpdate(card); err != nil {
 			return err
 		}

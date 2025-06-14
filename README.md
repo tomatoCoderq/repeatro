@@ -6,7 +6,7 @@
 
 - Spaced repetition for efficient vocabulary retention (using SM2 algorithm)
 - JWT-based user authentication
-- [In progress...] Decks to organize your vocabulary by topic or language
+- Decks to organize your vocabulary by topic or language
 - [In progress...] Language detection using [lingua-go](https://github.com/pemistahl/lingua-go)
 - [In progress...] RESTful API with [Swaggo](https://github.com/swaggo/swag) auto-generated Swagger docs
 - PostgreSQL backend with [Goose](https://github.com/pressly/goose) for migrations
