@@ -26,16 +26,20 @@ type HttpServer struct {
 
 func InitHTTPServer(config *viper.Viper, db *gorm.DB, security security.Security) *HttpServer {
 	// TODO: Add logger as middleware
+
+	resultRepository := repositories.CreateNewResultRepository(db)
 	cardRepository := repositories.CreateNewCardRepository(db)
-	cardService := services.CreateNewCardService(cardRepository)
-	cardController := controllers.CreateNewCardController(cardService)
-
 	deckRepository := repositories.CreateNewDeckRepository(db)
-	deckService := services.CreateNewDeckService(deckRepository, cardRepository)
-	deckController := controllers.CreateNewDeckController(deckService)
-
 	userRepository := repositories.CreateNewUserRepository(db)
+
+	cardService := services.CreateNewCardService(cardRepository, resultRepository)
+	resultsService := services.CreateNewResultService(resultRepository, cardRepository)
+	deckService := services.CreateNewDeckService(deckRepository, cardRepository)
 	userService := services.CreateNewUserService(userRepository, &security)
+
+	resultContoller := controllers.CreateNewResultController(resultsService)
+	cardController := controllers.CreateNewCardController(cardService)
+	deckController := controllers.CreateNewDeckController(deckService)
 	userController := controllers.CreateNewUserController(userService, &security)
 
 	security.UserRepository = userRepository
@@ -45,31 +49,31 @@ func InitHTTPServer(config *viper.Viper, db *gorm.DB, security security.Security
 	router.RedirectFixedPath = false
 
 	/* NOTE: Actually maybe i can not verify token each tome somehow and cache or smth*/
-
-	secured := router.Group("/cards")
-	securedDecks := router.Group("/decks")
-
+	secured := router.Group("")
 	secured.Use(security.AuthMiddleware(), middlewares.ValidUserMiddleware())
-	securedDecks.Use(security.AuthMiddleware())
 
-
-	/* TODO: Need to check again all deck connected functions */
-	securedDecks.Handle(http.MethodPost, "", deckController.AddDeck)
-	securedDecks.Handle(http.MethodGet, "", deckController.ReadAllDecks)
-	securedDecks.Handle(http.MethodGet, "/:id", deckController.ReadDeck)
-	securedDecks.Handle(http.MethodDelete, "/:id", deckController.DeleteDeck)
-	securedDecks.Handle(http.MethodPost, "/:deck_id/cards/:card_id", deckController.AddCardToDeck) // post one card
-	securedDecks.Handle(http.MethodGet, "/:id/cards", deckController.ReadCardsFromDeck)
-
-	secured.Handle(http.MethodPost, "", cardController.AddCard)
-	// BUG: Some bug here with update_at and expires_at. Recheck and fix
-	secured.Handle(http.MethodPost, "/answers", cardController.AddAnswers)
-	secured.Handle(http.MethodPut, "/:id", cardController.UpdateCard)
-	secured.Handle(http.MethodGet, "", cardController.ReadAllCardsToLearn)
-	secured.Handle(http.MethodDelete, "/:id", cardController.DeleteCard)
+	cards := secured.Group("/cards")
+	decks := secured.Group("/decks")
+	stats := secured.Group("/stats")
 
 	router.Handle(http.MethodPost, "register/", userController.Register)
 	router.Handle(http.MethodPost, "login/", userController.Login)
+
+	cards.Handle(http.MethodPost, "", cardController.AddCard)
+	// BUG: Some bug here with update_at and expires_at. Recheck and fix
+	cards.Handle(http.MethodGet, "", cardController.ReadAllCardsToLearn)
+	cards.Handle(http.MethodPut, "/:id", cardController.UpdateCard)
+	cards.Handle(http.MethodDelete, "/:id", cardController.DeleteCard)
+	cards.Handle(http.MethodPost, "/answers", cardController.AddAnswers)
+
+	decks.Handle(http.MethodPost, "", deckController.AddDeck)
+	decks.Handle(http.MethodGet, "", deckController.ReadAllDecks)
+	decks.Handle(http.MethodGet, "/:id", deckController.ReadDeck)
+	decks.Handle(http.MethodDelete, "/:id", deckController.DeleteDeck)
+	decks.Handle(http.MethodPost, "/:deck_id/cards/:card_id", deckController.AddCardToDeck) // post one card
+	decks.Handle(http.MethodGet, "/:id/cards", deckController.ReadCardsFromDeck)
+
+	stats.Handle(http.MethodGet, "", resultContoller.GetStats)
 
 	return &HttpServer{
 		config:         config,

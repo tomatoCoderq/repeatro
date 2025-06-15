@@ -37,10 +37,8 @@ N. Additionally air can be used for auto server restart
 ## RoadMap
 
 ### Near future tasks
-1. Add decks to divide words into groups (Japenese, School, Exam, ...)
-2. Add tagging system with ability to have multiple tags at the same time 
-3. Add stats (cards learned today, total reviews, average grade per day)
-4. Add import/export via csv, json
+1. Add import/export via csv, json
+2. Enhance current stats
 
 ### Future tasks
 1. Add simple front

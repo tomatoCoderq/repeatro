@@ -62,13 +62,17 @@ func SM2(
 }
 
 type CardService struct {
-	cardRepository repositories.CardRepositoryInterface
+	cardRepository   repositories.CardRepositoryInterface
+	resultRepository repositories.ResultRepositoryInterface
 }
 
 type CardServiceMock struct{}
 
-func CreateNewCardService(cardRepository *repositories.CardRepository) *CardService {
-	return &CardService{cardRepository: cardRepository}
+func CreateNewCardService(cardRepository *repositories.CardRepository, resultRepository *repositories.ResultRepository) *CardService {
+	return &CardService{
+		cardRepository:   cardRepository,
+		resultRepository: resultRepository,
+	}
 }
 
 type CardServiceInterface interface {
@@ -141,9 +145,9 @@ func (cm CardService) AddAnswers(userId uuid.UUID, answers []schemes.AnswerSchem
 		if err != nil {
 			return err
 		}
-		
+
 		fmt.Println("CARD", card)
-		//NOTE: If expire_time not reached yet the card will be just skipped
+		// NOTE: If expire_time not reached yet the card will be just skipped
 		if time.Now().Compare(card.ExpiresAt) != -1 {
 			continue
 		}
@@ -151,12 +155,6 @@ func (cm CardService) AddAnswers(userId uuid.UUID, answers []schemes.AnswerSchem
 		cardOwnerId := card.CreatedBy
 		if userId != cardOwnerId {
 			return fmt.Errorf("invalid card owner")
-		}
-
-		// get all parameters
-		card, err = cm.cardRepository.ReadCard(answer.CardId)
-		if err != nil {
-			return err
 		}
 
 		// recalculate values
@@ -173,8 +171,20 @@ func (cm CardService) AddAnswers(userId uuid.UUID, answers []schemes.AnswerSchem
 		card.Interval = int(reviewResult.Interval)
 		card.RepetitionNumber = reviewResult.Repetitions
 
-
 		if err = cm.cardRepository.PureUpdate(card); err != nil {
+			return err
+		}
+
+		result := models.Result {
+			UserId: card.CreatedBy,
+			CardId: card.CardId,
+			Grade: answer.Grade,
+		}
+
+		fmt.Println("Res", result.CreatedAt)
+
+		if err = cm.resultRepository.AddResult(&result); err != nil {
+			fmt.Println("so here")
 			return err
 		}
 	}
