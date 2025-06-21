@@ -50,7 +50,7 @@ func InitHTTPServer(config *viper.Viper, db *gorm.DB, security security.Security
 
 	/* NOTE: Actually maybe i can not verify token each tome somehow and cache or smth*/
 	secured := router.Group("")
-	secured.Use(security.AuthMiddleware(), middlewares.ValidUserMiddleware())
+	secured.Use(gin.Recovery(), security.AuthMiddleware(), middlewares.ValidUserMiddleware())
 
 	cards := secured.Group("/cards")
 	decks := secured.Group("/decks")
